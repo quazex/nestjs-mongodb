@@ -21,7 +21,6 @@
   ],
   "keywords": [
     "mongodb",
-    "elasticsearch",
     "nestjs",
     "nest",
     "typescript",

@@ -5,8 +5,8 @@ import { MongodbOptions } from './mongodb.types';
 import { MongodbUtilities } from './mongodb.utilities';
 
 export class MongodbProviders {
-    public static getOptions(options: MongoClientOptions): ValueProvider<MongoClientOptions> {
-        const optionsToken = MongodbUtilities.getOptionsToken(options.appName);
+    public static getOptions(options: MongoClientOptions & { name?: string }): ValueProvider<MongoClientOptions> {
+        const optionsToken = MongodbUtilities.getOptionsToken(options.name);
         return {
             provide: optionsToken,
             useValue: options,
