@@ -22,10 +22,10 @@ export class TestingMongodbFactory {
         const tProvider: FactoryProvider<TestingMongodbService> = {
             provide: this._token,
             useFactory: (client: MongoClient) => ({
-                onModuleInit: async(): Promise<void> => {
+                onApplicationBootstrap: async(): Promise<void> => {
                     await client.connect();
                 },
-                onModuleDestroy: async(): Promise<void> => {
+                onApplicationShutdown: async(): Promise<void> => {
                     await client.close();
                 },
                 write: async(document): Promise<InsertOneResult> => {
@@ -64,6 +64,7 @@ export class TestingMongodbFactory {
         });
 
         this._testing = await tModule.compile();
+        this._testing.enableShutdownHooks();
     }
 
     public async close(): Promise<void> {

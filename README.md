@@ -112,11 +112,11 @@ export class AppBootstrap implements OnApplicationBootstrap, OnApplicationShutdo
     constructor(@InjectMongodb() private readonly mongodbClient: Client) {}
 
     public async onApplicationBootstrap(): Promise<void> {
-        await this.client.connect();
+        await this.mongodbClient.connect();
     }
 
     public async onApplicationShutdown(): Promise<void> {
-        await this.client.close();
+        await this.mongodbClient.close();
     }
 }
 ```
