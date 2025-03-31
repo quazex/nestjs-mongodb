@@ -42,8 +42,8 @@ Once the module is registered, you can inject instance of the `MongodbClient` in
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Collection, Document, MongoClient, ObjectId, WithId } from '@mongodb-project/mongodb';
 import { InjectMongodb } from '@quazex/nestjs-mongodb';
+import { Collection, Document, MongoClient, ObjectId, WithId } from 'mongodb';
 
 @Injectable()
 export class CollectionService {
@@ -104,8 +104,8 @@ await app.listen(appConfig.port, '0.0.0.0');
 ```typescript
 // app.bootstrap.ts
 import { Injectable, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
-import { Client } from '@mongodb-project/mongodb';
 import { InjectMongodb } from '@quazex/nestjs-mongodb';
+import { Client } from 'mongodb';
 
 @Injectable()
 export class AppBootstrap implements OnApplicationBootstrap, OnApplicationShutdown {
