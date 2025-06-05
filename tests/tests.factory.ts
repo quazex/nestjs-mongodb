@@ -2,26 +2,28 @@ import { faker } from '@faker-js/faker';
 import { FactoryProvider } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongoDBContainer, StartedMongoDBContainer } from '@testcontainers/mongodb';
-import { InsertOneResult, MongoClient } from 'mongodb';
-import { MongodbModule } from '../source/mongodb.module';
-import { MongodbUtilities } from '../source/mongodb.utilities';
-import { TestingDocument, TestingMongodbService } from './tests.types';
+import { Collection, InsertOneResult, MongoClient } from 'mongodb';
+import { MongoModule } from '../source/mongo.module';
+import { MongoTokens } from '../source/mongo.tokens';
+import { TestingDocument, TestingMongoService } from './tests.types';
 
-export class TestingMongodbFactory {
+export class TestingMongoFactory {
     private _testing: TestingModule;
     private _container: StartedMongoDBContainer;
 
     private _token = faker.string.alpha({ length: 10 });
-    private _table = faker.string.alpha({ length: 10, casing: 'lower' });
+    private _coll = faker.string.alpha({ length: 10, casing: 'lower' });
 
     public async init(): Promise<void> {
         const tContainer = new MongoDBContainer();
-
         this._container = await tContainer.withReuse().start();
 
-        const tProvider: FactoryProvider<TestingMongodbService> = {
+        const tProvider: FactoryProvider<TestingMongoService> = {
             provide: this._token,
-            useFactory: (client: MongoClient) => ({
+            useFactory: (
+                client: MongoClient,
+                collection: Collection,
+            ) => ({
                 onApplicationBootstrap: async(): Promise<void> => {
                     await client.connect();
                 },
@@ -29,12 +31,10 @@ export class TestingMongodbFactory {
                     await client.close();
                 },
                 write: async(document): Promise<InsertOneResult> => {
-                    const collection = client.db().collection(this._table);
                     const result = await collection.insertOne(document);
                     return result;
                 },
                 read: async(id): Promise<TestingDocument | null> => {
-                    const collection = client.db().collection(this._table);
                     const reply = await collection.findOne({
                         _id: id,
                     });
@@ -47,16 +47,18 @@ export class TestingMongodbFactory {
                 },
             }),
             inject: [
-                MongodbUtilities.getClientToken(),
+                MongoTokens.getClient(),
+                MongoTokens.getCollection(this._coll),
             ],
         };
 
         const tModule = Test.createTestingModule({
             imports: [
-                MongodbModule.forRoot({
+                MongoModule.forRoot({
                     url: this._container.getConnectionString(),
                     directConnection: true,
                 }),
+                MongoModule.forCollection(this._coll),
             ],
             providers: [
                 tProvider,
@@ -64,6 +66,8 @@ export class TestingMongodbFactory {
         });
 
         this._testing = await tModule.compile();
+        this._testing = await this._testing.init();
+
         this._testing.enableShutdownHooks();
     }
 
@@ -72,7 +76,7 @@ export class TestingMongodbFactory {
         await this._container.stop();
     }
 
-    public getService(): TestingMongodbService {
-        return this._testing.get<TestingMongodbService>(this._token);
+    public get service(): TestingMongoService {
+        return this._testing.get<TestingMongoService>(this._token);
     }
 }

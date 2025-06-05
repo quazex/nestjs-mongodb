@@ -2,26 +2,30 @@ import { Faker, faker } from '@faker-js/faker';
 import { describe, expect, jest, test } from '@jest/globals';
 import { Injectable, Module, ValueProvider } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { MongodbOptionsFactory } from '../source/mongodb.interfaces';
-import { MongodbModule } from '../source/mongodb.module';
-import { MongodbOptions } from '../source/mongodb.types';
+import { MongoOptionsFactory } from '../source/mongo.interfaces';
+import { MongoModule } from '../source/mongo.module';
+import { MongoOptions } from '../source/mongo.types';
 
 jest.mock('mongodb', () => ({
-    MongoClient: jest.fn(),
+    MongoClient: jest.fn().mockReturnValue({
+        db: jest.fn().mockReturnValue({
+            collection: jest.fn(),
+        }),
+    }),
 }));
 
-describe('Mongodb > Unit', () => {
+describe('Mongo > Unit', () => {
     test('forRoot()', async() => {
         const tBuilder = Test.createTestingModule({
             imports: [
-                MongodbModule.forRoot({
+                MongoModule.forRoot({
                     url: faker.internet.url(),
                 }),
             ],
         });
         const tFixture = await tBuilder.compile();
 
-        const oModule = tFixture.get(MongodbModule);
+        const oModule = tFixture.get(MongoModule);
         expect(oModule).toBeDefined();
 
         await tFixture.close();
@@ -42,7 +46,7 @@ describe('Mongodb > Unit', () => {
 
         const tBuilder = Test.createTestingModule({
             imports: [
-                MongodbModule.forRootAsync({
+                MongoModule.forRootAsync({
                     imports: [ConfigModule],
                     useFactory: (f: Faker) => ({
                         url: f.internet.url(),
@@ -53,16 +57,16 @@ describe('Mongodb > Unit', () => {
         });
         const tFixture = await tBuilder.compile();
 
-        const oModule = tFixture.get(MongodbModule);
-        expect(oModule).toBeInstanceOf(MongodbModule);
+        const oModule = tFixture.get(MongoModule);
+        expect(oModule).toBeInstanceOf(MongoModule);
 
         await tFixture.close();
     });
 
     test('forRootAsync with useExisting()', async() => {
         @Injectable()
-        class MongodbConfig implements MongodbOptionsFactory {
-            public createMongodbOptions(): MongodbOptions {
+        class MongoConfig implements MongoOptionsFactory {
+            public createMongoOptions(): MongoOptions {
                 return {
                     url: faker.internet.url(),
                 };
@@ -70,24 +74,23 @@ describe('Mongodb > Unit', () => {
         }
 
         @Module({
-            providers: [MongodbConfig],
-            exports: [MongodbConfig],
+            providers: [MongoConfig],
+            exports: [MongoConfig],
         })
         class ConfigModule {}
 
         const tBuilder = Test.createTestingModule({
             imports: [
-                MongodbModule.forRootAsync({
+                MongoModule.forRootAsync({
                     imports: [ConfigModule],
-                    useExisting: MongodbConfig,
-                    name: faker.string.alpha({ length: 10 }),
+                    useExisting: MongoConfig,
                 }),
             ],
         });
         const tFixture = await tBuilder.compile();
 
-        const oModule = tFixture.get(MongodbModule);
-        expect(oModule).toBeInstanceOf(MongodbModule);
+        const oModule = tFixture.get(MongoModule);
+        expect(oModule).toBeInstanceOf(MongoModule);
 
         await tFixture.close();
     });
