@@ -25,12 +25,12 @@ import { Module } from '@nestjs/common';
 import { MongoModule } from '@quazex/nestjs-mongodb';
 
 @Module({
-  imports: [
-    MongoModule.forRoot({
-        url: 'mongodb://localhost:27017',
-    }),
-    MongoModule.forCollection('some_col'),
-  ],
+    imports: [
+        MongoModule.forRoot({
+            url: 'mongodb://localhost:27017',
+        }),
+        MongoModule.forCollection('some_col'),
+    ],
 })
 export class AppModule {}
 ```
@@ -71,11 +71,11 @@ import { MongoModule } from '@quazex/nestjs-mongodb';
 @Module({
     imports: [
         MongoModule.forRootAsync({
-            useFactory: async (config) => ({
+            useFactory: async (config: SomeConfigProvider) => ({
                 url: config.MONGODB_URL,
             }),
             inject: [
-                ConfigProvider,
+                SomeConfigProvider,
             ],
         }),
     ],
@@ -85,11 +85,16 @@ export class AppModule {}
 
 ### Connection and graceful shutdown
 
-By default, this module doesn't manage client connection on application bootstrap or shutdown. You can read more about lifecycle hooks on the NestJS [documentation page](https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown). 
+By default, this module doesn't manage client connection on application bootstrap or shutdown. You can read more about lifecycle hooks on the NestJS [documentation page](https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown).
 
 ```typescript
 // main.ts
+const app = await NestFactory.create(AppModule);
+
+// Starts listening for shutdown hooks
 app.enableShutdownHooks(); // <<<
+
+await app.listen(process.env.PORT ?? 3000);
 ```
 
 ```typescript
