@@ -37,16 +37,20 @@ export class AppModule {}
 
 ### Using Mongo connection
 
-Once the module is registered, you can inject instance of the `MongoClient` into your providers:
+Once the module is registered, you can inject instances of the `MongoClient`, `Db` or `Collection` into your providers:
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { InjectMongoCollection } from '@quazex/nestjs-mongodb';
-import { Collection, Document, MongoClient, ObjectId, WithId } from 'mongodb';
+import { InjectMongoClient, InjectMongoDatabase, InjectMongoCollection } from '@quazex/nestjs-mongodb';
+import { Collection, Db, Document, MongoClient, ObjectId, WithId } from 'mongodb';
 
 @Injectable()
 export class CollectionService {
-    constructor(@InjectMongoCollection('some_col') private readonly collection: Collection) {}
+    constructor(
+        @InjectMongoClient() private readonly client: MongoClient,
+        @InjectMongoDatabase() private readonly database: Db,
+        @InjectMongoCollection('some_col') private readonly collection: Collection,
+    ) {}
 
     async insert(document: WithId<Document>) {
         await this.collection.insertOne(document);
@@ -101,11 +105,11 @@ await app.listen(process.env.PORT ?? 3000);
 // app.bootstrap.ts
 import { Injectable, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
 import { InjectMongoClient } from '@quazex/nestjs-mongodb';
-import { Client } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 @Injectable()
 export class AppBootstrap implements OnApplicationBootstrap, OnApplicationShutdown {
-    constructor(@InjectMongoClient() private readonly client: Client) {}
+    constructor(@InjectMongoClient() private readonly client: MongoClient) {}
 
     public async onApplicationBootstrap(): Promise<void> {
         await this.client.connect();
