@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { FactoryProvider } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongoDBContainer, StartedMongoDBContainer } from '@testcontainers/mongodb';
-import { Collection, InsertOneResult, MongoClient } from 'mongodb';
+import { Collection, Db, InsertOneResult } from 'mongodb';
 import { MongoModule } from '../source/mongo.module';
 import { MongoTokens } from '../source/mongo.tokens';
 import { TestingDocument, TestingMongoService } from './tests.types';
@@ -21,15 +21,9 @@ export class TestingMongoFactory {
         const tProvider: FactoryProvider<TestingMongoService> = {
             provide: this._token,
             useFactory: (
-                client: MongoClient,
+                database: Db,
                 collection: Collection,
             ) => ({
-                onApplicationBootstrap: async(): Promise<void> => {
-                    await client.connect();
-                },
-                onApplicationShutdown: async(): Promise<void> => {
-                    await client.close();
-                },
                 write: async(document): Promise<InsertOneResult> => {
                     const result = await collection.insertOne(document);
                     return result;
@@ -41,13 +35,12 @@ export class TestingMongoFactory {
                     return reply;
                 },
                 ping: async(): Promise<boolean> => {
-                    const database = client.db();
                     const reply = await database.admin().ping();
                     return reply.ok === 1;
                 },
             }),
             inject: [
-                MongoTokens.getClient(),
+                MongoTokens.getDatabase(),
                 MongoTokens.getCollection(this._coll),
             ],
         };
@@ -66,9 +59,9 @@ export class TestingMongoFactory {
         });
 
         this._testing = await tModule.compile();
-        this._testing = await this._testing.init();
-
         this._testing.enableShutdownHooks();
+
+        this._testing = await this._testing.init();
     }
 
     public async close(): Promise<void> {

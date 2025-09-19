@@ -8,6 +8,8 @@ import { MongoOptions } from '../source/mongo.types';
 
 jest.mock('mongodb', () => ({
     MongoClient: jest.fn().mockReturnValue({
+        connect: jest.fn(),
+        close: jest.fn(),
         db: jest.fn().mockReturnValue({
             collection: jest.fn(),
         }),
