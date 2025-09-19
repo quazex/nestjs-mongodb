@@ -12,7 +12,7 @@ export class MongoTokens {
     }
 
     public static getCollection(collection: string): string {
-        const description = collection.trim().toLowerCase();
-        return String(`mongodb_module_collection_${description}`);
+        const name = collection.trim().toLowerCase();
+        return String(`mongodb_module_collection_${name}`);
     }
 }
