@@ -1,5 +1,5 @@
-import { MongoClientOptions } from 'mongodb';
+import { MongoClientOptions } from 'mongodb'
 
 export interface MongoOptions extends MongoClientOptions {
-    url: string;
+  url: string
 }
